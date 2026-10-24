@@ -19,10 +19,10 @@ export default function ChatWindow({ friend, messages, meId, onSend }) {
     return (
       <div className="empty-chat">
         <div className="empty-chat-icon">💬</div>
-        <h2>Bienvenue sur ChatLibre !</h2>
+        <h2>Tongasoa eto amin'ny ChatLibre !</h2>
         <p>
-          Recherchez un utilisateur dans la barre latérale, envoyez-lui une demande
-          d'ami, puis discutez en temps réel — gratuitement.
+          Karohy mpampiasa eo amin'ny sisiny, alefaso fangatahana namana, avy eo
+          dia mifanerasera mivantana — maimaim-poana.
         </p>
       </div>
     );
@@ -45,7 +45,7 @@ export default function ChatWindow({ friend, messages, meId, onSend }) {
         <div>
           <h2>{friend.username}</h2>
           <span className="status">
-            {friend.online ? 'En ligne' : 'Hors ligne'}
+            {friend.online ? 'An-tserasera' : 'Tsy an-tserasera'}
           </span>
         </div>
       </header>
@@ -62,12 +62,12 @@ export default function ChatWindow({ friend, messages, meId, onSend }) {
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder={`Message à ${friend.username}…`}
-          aria-label="Message"
+          placeholder={`Hafatra ho an'i ${friend.username}…`}
+          aria-label="Hafatra"
           autoFocus
         />
         <button type="submit" disabled={!text.trim()}>
-          Envoyer
+          Alefa
         </button>
       </form>
     </>

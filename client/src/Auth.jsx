@@ -29,52 +29,52 @@ export default function Auth({ onLogin }) {
         <h1>💬 ChatLibre</h1>
         <p className="sub">
           {mode === 'login'
-            ? 'Connectez-vous pour discuter'
-            : 'Créez votre compte gratuit'}
+            ? 'Midira mba hiresaka'
+            : 'Forony ny kaontinao maimaim-poana'}
         </p>
         <form onSubmit={submit}>
           {error && <div className="error-box">{error}</div>}
           <input
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            placeholder="Nom d'utilisateur"
-            aria-label="Nom d'utilisateur"
+            placeholder="Anarana"
+            aria-label="Anarana"
             autoFocus
           />
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Mot de passe"
-            aria-label="Mot de passe"
+            placeholder="Tenimiafina"
+            aria-label="Tenimiafina"
           />
           <button className="btn-primary-full" disabled={busy}>
-            {busy ? '…' : mode === 'login' ? 'Se connecter' : "S'inscrire"}
+            {busy ? '…' : mode === 'login' ? 'Hiditra' : 'Hisoratra anarana'}
           </button>
         </form>
         <p className="auth-toggle">
           {mode === 'login' ? (
             <>
-              Pas de compte ?{' '}
+              Tsy manana kaonty ?{' '}
               <button
                 onClick={() => {
                   setMode('register');
                   setError('');
                 }}
               >
-                S'inscrire
+                Hisoratra anarana
               </button>
             </>
           ) : (
             <>
-              Déjà un compte ?{' '}
+              Efa manana kaonty ?{' '}
               <button
                 onClick={() => {
                   setMode('login');
                   setError('');
                 }}
               >
-                Se connecter
+                Hiditra
               </button>
             </>
           )}

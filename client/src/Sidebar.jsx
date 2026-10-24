@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { api } from './api.js';
 
 const STATUS_LABELS = {
-  friends: 'Ami',
-  pending_out: 'Demande envoyée',
-  pending_in: 'Vous a envoyé une demande',
+  friends: 'Namana',
+  pending_out: 'Voalefa ny fangatahana',
+  pending_in: 'Nandefa fangatahana taminao',
 };
 
 export default function Sidebar({
@@ -42,7 +42,7 @@ export default function Sidebar({
   async function addFriend(id) {
     try {
       await api('/api/friends/request', { method: 'POST', body: { userId: id } });
-      setNotice('Demande envoyée ✔');
+      setNotice('Voalefa ny fangatahana ✔');
       setResults([]);
       setSearched(false);
       setQ('');
@@ -68,7 +68,7 @@ export default function Sidebar({
         <div className="sidebar-header-name" title={user.username}>
           {user.username}
         </div>
-        <button className="btn ghost" onClick={onLogout} title="Se déconnecter">
+        <button className="btn ghost" onClick={onLogout} title="Hivoaka">
           ⎋
         </button>
       </div>
@@ -77,8 +77,8 @@ export default function Sidebar({
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Rechercher un utilisateur…"
-          aria-label="Rechercher un utilisateur"
+          placeholder="Karohy mpampiasa…"
+          aria-label="Karohy mpampiasa"
         />
         <button type="submit" className="btn primary">OK</button>
       </form>
@@ -86,15 +86,15 @@ export default function Sidebar({
 
       {searched && (
         <div className="section">
-          <h3>Résultats</h3>
-          {results.length === 0 && <p className="muted">Aucun utilisateur trouvé.</p>}
+          <h3>Valiny</h3>
+          {results.length === 0 && <p className="muted">Tsy nisy mpampiasa hita.</p>}
           {results.map((r) => (
             <div key={r.id} className="row">
               <div className="avatar small">{r.username[0].toUpperCase()}</div>
               <div className="row-main">{r.username}</div>
               {r.status === 'none' ? (
                 <button className="btn primary small" onClick={() => addFriend(r.id)}>
-                  + Ajouter
+                  + Ampio
                 </button>
               ) : (
                 <span className="muted small-text">{STATUS_LABELS[r.status]}</span>
@@ -106,21 +106,21 @@ export default function Sidebar({
 
       {requests.length > 0 && (
         <div className="section">
-          <h3>Demandes d'ami ({requests.length})</h3>
+          <h3>Fangatahana namana ({requests.length})</h3>
           {requests.map((r) => (
             <div key={r.id} className="row">
               <div className="avatar small">{r.username[0].toUpperCase()}</div>
               <div className="row-main">{r.username}</div>
               <button
                 className="btn primary small"
-                title="Accepter"
+                title="Ekeo"
                 onClick={() => respond(r.id, 'accept')}
               >
                 ✓
               </button>
               <button
                 className="btn ghost small"
-                title="Refuser"
+                title="Lavina"
                 onClick={() => respond(r.id, 'decline')}
               >
                 ✕
@@ -131,9 +131,9 @@ export default function Sidebar({
       )}
 
       <div className="section grow">
-        <h3>Amis ({friends.length})</h3>
+        <h3>Namana ({friends.length})</h3>
         {friends.length === 0 && (
-          <p className="muted">Ajoutez des amis pour discuter.</p>
+          <p className="muted">Ampio namana mba hiresaka.</p>
         )}
         {friends.map((f) => (
           <button
@@ -147,7 +147,7 @@ export default function Sidebar({
             <div className="row-main">
               <span className="friend-name">{f.username}</span>
               <span className="friend-last">
-                {f.last_message || 'Aucun message'}
+                {f.last_message || 'Tsy misy hafatra'}
               </span>
             </div>
             {f.unread > 0 && <span className="badge">{f.unread}</span>}

@@ -44,14 +44,14 @@ app.post('/api/register', (req, res) => {
   const { username, password } = req.body || {};
   if (!username || !/^[a-zA-Z0-9._]{3,20}$/.test(username)) {
     return res.status(400).json({
-      error: "Nom d'utilisateur invalide (3 à 20 caractères : lettres, chiffres, . ou _)",
+      error: "Anarana tsy mety (3 ka hatramin'ny 20 litera: litera, isa, . na _)",
     });
   }
   if (!password || password.length < 6) {
-    return res.status(400).json({ error: 'Mot de passe requis (6 caractères minimum)' });
+    return res.status(400).json({ error: 'Ilaina ny tenimiafina (farafahakeliny 6 litera)' });
   }
   if (db.prepare('SELECT id FROM users WHERE username = ?').get(username)) {
-    return res.status(409).json({ error: "Ce nom d'utilisateur est déjà pris" });
+    return res.status(409).json({ error: 'Efa nampiasaina io anarana io' });
   }
   const hash = bcrypt.hashSync(password, 10);
   const info = db
@@ -65,7 +65,7 @@ app.post('/api/login', (req, res) => {
   const { username, password } = req.body || {};
   const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
   if (!user || !bcrypt.compareSync(password || '', user.password_hash)) {
-    return res.status(401).json({ error: 'Identifiants incorrects' });
+    return res.status(401).json({ error: 'Misy diso ny anarana na ny tenimiafina' });
   }
   tokenCookie(res, user.id);
   res.json({ user: { id: user.id, username: user.username } });
@@ -144,16 +144,16 @@ app.get('/api/users/search', requireAuth, (req, res) => {
 app.post('/api/friends/request', requireAuth, (req, res) => {
   const target = Number(req.body?.userId);
   if (!target || target === req.userId) {
-    return res.status(400).json({ error: 'Utilisateur invalide' });
+    return res.status(400).json({ error: 'Mpampiasa tsy mety' });
   }
-  if (!publicUser(target)) return res.status(404).json({ error: 'Utilisateur introuvable' });
+  if (!publicUser(target)) return res.status(404).json({ error: 'Tsy hita ilay mpampiasa' });
   const existing = friendshipBetween(req.userId, target);
   if (existing) {
     return res.status(409).json({
       error:
         existing.status === 'accepted'
-          ? 'Vous êtes déjà amis'
-          : 'Une demande est déjà en cours',
+          ? 'Efa namana ianareo'
+          : 'Efa misy fangatahana mandeha',
     });
   }
   db.prepare(
@@ -172,7 +172,7 @@ app.post('/api/friends/respond', requireAuth, (req, res) => {
       `SELECT * FROM friendships WHERE id = ? AND addressee_id = ? AND status = 'pending'`
     )
     .get(requestId, req.userId);
-  if (!f) return res.status(404).json({ error: 'Demande introuvable' });
+  if (!f) return res.status(404).json({ error: 'Tsy hita ilay fangatahana' });
   if (action === 'accept') {
     db.prepare(`UPDATE friendships SET status = 'accepted' WHERE id = ?`).run(f.id);
     io.to(`user:${f.requester_id}`).emit('friend-updated');
@@ -188,7 +188,7 @@ app.get('/api/messages/:friendId', requireAuth, (req, res) => {
   const other = Number(req.params.friendId);
   const f = friendshipBetween(req.userId, other);
   if (!f || f.status !== 'accepted') {
-    return res.status(403).json({ error: "Vous n'êtes pas amis avec cet utilisateur" });
+    return res.status(403).json({ error: 'Tsy namana amin\'ilay mpampiasa ianao' });
   }
   db.prepare(
     `UPDATE messages SET read_at = ? WHERE sender_id = ? AND recipient_id = ? AND read_at IS NULL`
@@ -218,10 +218,10 @@ app.post('/api/messages/read', requireAuth, (req, res) => {
 app.post('/api/messages', requireAuth, (req, res) => {
   const recipientId = Number(req.body?.recipientId);
   const body = String(req.body?.body || '').trim().slice(0, 2000);
-  if (!recipientId || !body) return res.status(400).json({ error: 'Message vide' });
+  if (!recipientId || !body) return res.status(400).json({ error: 'Hafatra foana' });
   const f = friendshipBetween(req.userId, recipientId);
   if (!f || f.status !== 'accepted') {
-    return res.status(403).json({ error: "Vous ne pouvez écrire qu'à vos amis" });
+    return res.status(403).json({ error: 'Tsy afaka manoratra afa-tsy amin\'ny namana ianao' });
   }
   const info = db
     .prepare(

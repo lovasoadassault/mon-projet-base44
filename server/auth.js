@@ -27,7 +27,7 @@ export function tokenCookie(res, userId) {
 
 export function requireAuth(req, res, next) {
   const userId = verifyToken(req.cookies ? req.cookies[COOKIE_NAME] : undefined);
-  if (!userId) return res.status(401).json({ error: 'Non authentifié' });
+  if (!userId) return res.status(401).json({ error: 'Tsy voamarina' });
   req.userId = userId;
   next();
 }

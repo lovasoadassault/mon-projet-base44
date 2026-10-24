@@ -14,7 +14,7 @@ export default function App() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="loading-screen">Chargement…</div>;
+  if (loading) return <div className="loading-screen">Miandrasana kely…</div>;
 
   return user ? (
     <ChatApp user={user} onLogout={() => setUser(null)} />

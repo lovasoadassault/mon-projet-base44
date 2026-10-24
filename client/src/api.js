@@ -11,6 +11,6 @@ export async function api(path, { method = 'GET', body } = {}) {
   } catch {
     /* réponse vide */
   }
-  if (!res.ok) throw new Error(data.error || 'Une erreur est survenue');
+  if (!res.ok) throw new Error(data.error || 'Nisy olana nanjo');
   return data;
 }
