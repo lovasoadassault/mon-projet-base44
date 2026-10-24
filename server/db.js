@@ -31,6 +31,23 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS idx_messages_pair
     ON messages (sender_id, recipient_id, id);
+
+  CREATE TABLE IF NOT EXISTS username_changes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    old_username TEXT NOT NULL,
+    new_username TEXT NOT NULL,
+    changed_at TEXT NOT NULL
+  );
 `);
+
+// Nouveaux champs de profil (migrations incrémentales)
+for (const col of ['avatar TEXT', 'address TEXT', 'age INTEGER']) {
+  try {
+    db.exec(`ALTER TABLE users ADD COLUMN ${col}`);
+  } catch {
+    /* la colonne existe déjà */
+  }
+}
 
 export default db;

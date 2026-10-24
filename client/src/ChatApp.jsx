@@ -3,12 +3,14 @@ import { api } from './api.js';
 import { socket } from './socket.js';
 import Sidebar from './Sidebar.jsx';
 import ChatWindow from './ChatWindow.jsx';
+import Profile from './Profile.jsx';
 
-export default function ChatApp({ user, onLogout }) {
+export default function ChatApp({ user, onLogout, onUserUpdate }) {
   const [friends, setFriends] = useState([]);
   const [requests, setRequests] = useState([]);
   const [activeFriend, setActiveFriend] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [showProfile, setShowProfile] = useState(false);
   const activeIdRef = useRef(null);
 
   const refreshFriends = useCallback(
@@ -110,6 +112,7 @@ export default function ChatApp({ user, onLogout }) {
         onOpen={openConversation}
         onLogout={handleLogout}
         onRefresh={refreshAll}
+        onOpenProfile={() => setShowProfile(true)}
       />
       <main className="chat">
         <ChatWindow
@@ -119,6 +122,16 @@ export default function ChatApp({ user, onLogout }) {
           onSend={sendMessage}
         />
       </main>
+      {showProfile && (
+        <Profile
+          user={user}
+          onClose={() => setShowProfile(false)}
+          onSaved={(u) => {
+            onUserUpdate?.(u);
+            refreshAll();
+          }}
+        />
+      )}
     </div>
   );
 }

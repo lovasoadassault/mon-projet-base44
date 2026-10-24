@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { api } from './api.js';
+import Flag from './Flag.jsx';
 
 export default function Auth({ onLogin }) {
   const [mode, setMode] = useState('login');
@@ -26,7 +27,9 @@ export default function Auth({ onLogin }) {
   return (
     <div className="auth-wrap">
       <div className="auth-card">
-        <h1>💬 ChatLibre</h1>
+        <h1 className="brand">
+          <Flag /> aiza izy
+        </h1>
         <p className="sub">
           {mode === 'login'
             ? 'Midira mba hiresaka'

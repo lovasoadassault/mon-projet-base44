@@ -17,7 +17,7 @@ export default function App() {
   if (loading) return <div className="loading-screen">Miandrasana kely…</div>;
 
   return user ? (
-    <ChatApp user={user} onLogout={() => setUser(null)} />
+    <ChatApp user={user} onLogout={() => setUser(null)} onUserUpdate={setUser} />
   ) : (
     <Auth onLogin={setUser} />
   );

@@ -1,4 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
+import Avatar from './Avatar.jsx';
+import Flag from './Flag.jsx';
+
+export function userMeta(u) {
+  return [
+    u.online ? 'An-tserasera' : 'Tsy an-tserasera',
+    u.address,
+    u.age ? `${u.age} taona` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
 
 function formatTime(iso) {
   return new Date(iso).toLocaleTimeString('fr-FR', {
@@ -18,8 +30,10 @@ export default function ChatWindow({ friend, messages, meId, onSend }) {
   if (!friend) {
     return (
       <div className="empty-chat">
-        <div className="empty-chat-icon">💬</div>
-        <h2>Tongasoa eto amin'ny ChatLibre !</h2>
+        <div className="empty-chat-icon">
+          <Flag size={80} />
+        </div>
+        <h2>Tongasoa eto amin'ny « aiza izy » !</h2>
         <p>
           Karohy mpampiasa eo amin'ny sisiny, alefaso fangatahana namana, avy eo
           dia mifanerasera mivantana — maimaim-poana.
@@ -39,14 +53,10 @@ export default function ChatWindow({ friend, messages, meId, onSend }) {
   return (
     <>
       <header className="chat-header">
-        <div className={`avatar ${friend.online ? 'online' : ''}`}>
-          {friend.username[0].toUpperCase()}
-        </div>
+        <Avatar user={friend} className={friend.online ? 'online' : ''} />
         <div>
           <h2>{friend.username}</h2>
-          <span className="status">
-            {friend.online ? 'An-tserasera' : 'Tsy an-tserasera'}
-          </span>
+          <span className="status">{userMeta(friend)}</span>
         </div>
       </header>
       <div className="messages">

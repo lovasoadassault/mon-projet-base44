@@ -20,7 +20,7 @@ app.use(cookieParser());
 const online = new Map();
 
 const publicUser = (id) =>
-  db.prepare('SELECT id, username FROM users WHERE id = ?').get(id);
+  db.prepare('SELECT id, username, avatar, address, age FROM users WHERE id = ?').get(id);
 
 const friendshipBetween = (a, b) =>
   db.prepare(
@@ -58,7 +58,7 @@ app.post('/api/register', (req, res) => {
     .prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)')
     .run(username, hash);
   tokenCookie(res, info.lastInsertRowid);
-  res.status(201).json({ user: { id: info.lastInsertRowid, username } });
+  res.status(201).json({ user: publicUser(info.lastInsertRowid) });
 });
 
 app.post('/api/login', (req, res) => {
@@ -68,7 +68,7 @@ app.post('/api/login', (req, res) => {
     return res.status(401).json({ error: 'Misy diso ny anarana na ny tenimiafina' });
   }
   tokenCookie(res, user.id);
-  res.json({ user: { id: user.id, username: user.username } });
+  res.json({ user: publicUser(user.id) });
 });
 
 app.post('/api/logout', (req, res) => {
@@ -77,6 +77,90 @@ app.post('/api/logout', (req, res) => {
 });
 
 app.get('/api/me', requireAuth, (req, res) => {
+  res.json({ user: publicUser(req.userId) });
+});
+
+// ---------- Profil ----------
+const notifyFriends = (me, event) => {
+  for (const fid of friendIdsOf(me)) io.to(`user:${fid}`).emit(event);
+};
+
+app.post('/api/profile', requireAuth, (req, res) => {
+  const me = req.userId;
+  const { username, address, age } = req.body || {};
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(me);
+  const updates = {};
+
+  if (username !== undefined && username !== user.username) {
+    if (!/^[a-zA-Z0-9._]{3,20}$/.test(username)) {
+      return res.status(400).json({
+        error: "Anarana tsy mety (3 ka hatramin'ny 20 litera: litera, isa, . na _)",
+      });
+    }
+    if (
+      db.prepare('SELECT id FROM users WHERE username = ? AND id != ?').get(username, me)
+    ) {
+      return res.status(409).json({ error: 'Efa nampiasaina io anarana io' });
+    }
+    const monthAgo = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
+    const changes = db
+      .prepare(
+        'SELECT COUNT(*) AS c FROM username_changes WHERE user_id = ? AND changed_at > ?'
+      )
+      .get(me, monthAgo).c;
+    if (changes >= 2) {
+      return res.status(429).json({
+        error: 'Voafetra ny fanovana anarana: indroa isam-bolana fara-fahakeliny',
+      });
+    }
+    updates.username = username;
+  }
+
+  if (address !== undefined) {
+    updates.address = String(address).trim().slice(0, 60) || null;
+  }
+
+  if (age !== undefined) {
+    if (age === null || age === '') {
+      updates.age = null;
+    } else {
+      const a = Number(age);
+      if (!Number.isInteger(a) || a < 1 || a > 120) {
+        return res.status(400).json({ error: "Taona tsy mety (isa 1–120)" });
+      }
+      updates.age = a;
+    }
+  }
+
+  if (Object.keys(updates).length > 0) {
+    const set = Object.keys(updates)
+      .map((k) => `${k} = ?`)
+      .join(', ');
+    db.prepare(`UPDATE users SET ${set} WHERE id = ?`).run(
+      ...Object.values(updates),
+      me
+    );
+    if (updates.username) {
+      db.prepare(
+        `INSERT INTO username_changes (user_id, old_username, new_username, changed_at)
+         VALUES (?, ?, ?, ?)`
+      ).run(me, user.username, updates.username, now());
+    }
+    notifyFriends(me, 'friend-updated');
+  }
+  res.json({ user: publicUser(me) });
+});
+
+app.post('/api/avatar', requireAuth, (req, res) => {
+  const avatar = String(req.body?.avatar || '');
+  if (avatar && !avatar.startsWith('data:image/')) {
+    return res.status(400).json({ error: 'Tsy sary mety io fidirana io' });
+  }
+  if (avatar.length > 1_500_000) {
+    return res.status(400).json({ error: "Be loatra ny sary (1 Mo fara-fahakeliny)" });
+  }
+  db.prepare('UPDATE users SET avatar = ? WHERE id = ?').run(avatar || null, req.userId);
+  notifyFriends(req.userId, 'friend-updated');
   res.json({ user: publicUser(req.userId) });
 });
 
@@ -99,6 +183,9 @@ app.get('/api/friends', requireAuth, (req, res) => {
       return {
         id,
         username: u.username,
+        avatar: u.avatar,
+        address: u.address,
+        age: u.age,
         online: (online.get(id) || 0) > 0,
         unread: stmtUnread.get(id, me).c,
         last_message: last ? last.body : null,
@@ -112,7 +199,7 @@ app.get('/api/friends', requireAuth, (req, res) => {
 app.get('/api/requests', requireAuth, (req, res) => {
   const requests = db
     .prepare(
-      `SELECT f.id, f.requester_id, u.username
+      `SELECT f.id, f.requester_id, u.username, u.avatar, u.address, u.age
        FROM friendships f JOIN users u ON u.id = f.requester_id
        WHERE f.addressee_id = ? AND f.status = 'pending'`
     )
@@ -125,7 +212,7 @@ app.get('/api/users/search', requireAuth, (req, res) => {
   if (!q) return res.json({ results: [] });
   const rows = db
     .prepare(
-      `SELECT id, username FROM users WHERE username LIKE ? AND id != ?
+      `SELECT id, username, avatar, address, age FROM users WHERE username LIKE ? AND id != ?
        ORDER BY username LIMIT 20`
     )
     .all(`%${q}%`, req.userId);
@@ -136,7 +223,7 @@ app.get('/api/users/search', requireAuth, (req, res) => {
       if (f.status === 'accepted') status = 'friends';
       else status = f.requester_id === req.userId ? 'pending_out' : 'pending_in';
     }
-    return { id: u.id, username: u.username, status };
+    return { id: u.id, username: u.username, avatar: u.avatar, address: u.address, age: u.age, status };
   });
   res.json({ results });
 });
@@ -286,5 +373,5 @@ io.on('connection', (socket) => {
 });
 
 httpServer.listen(PORT, '0.0.0.0', () => {
-  console.log(`ChatLibre API + realtime listening on :${PORT}`);
+  console.log(`aiza izy — API + realtime listening on :${PORT}`);
 });

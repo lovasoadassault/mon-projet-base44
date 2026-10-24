@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { api } from './api.js';
+import Avatar from './Avatar.jsx';
 
 const STATUS_LABELS = {
   friends: 'Namana',
@@ -15,6 +16,7 @@ export default function Sidebar({
   onOpen,
   onLogout,
   onRefresh,
+  onOpenProfile,
 }) {
   const [q, setQ] = useState('');
   const [results, setResults] = useState([]);
@@ -64,11 +66,19 @@ export default function Sidebar({
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <div className="avatar">{user.username[0].toUpperCase()}</div>
+        <Avatar user={user} />
         <div className="sidebar-header-name" title={user.username}>
           {user.username}
         </div>
-        <button className="btn ghost" onClick={onLogout} title="Hivoaka">
+        <button
+          className="btn ghost"
+          onClick={onOpenProfile}
+          title="Mombamomba ahy"
+          aria-label="Mombamomba ahy"
+        >
+          ⚙
+        </button>
+        <button className="btn ghost" onClick={onLogout} title="Hivoaka" aria-label="Hivoaka">
           ⎋
         </button>
       </div>
@@ -90,8 +100,17 @@ export default function Sidebar({
           {results.length === 0 && <p className="muted">Tsy nisy mpampiasa hita.</p>}
           {results.map((r) => (
             <div key={r.id} className="row">
-              <div className="avatar small">{r.username[0].toUpperCase()}</div>
-              <div className="row-main">{r.username}</div>
+              <Avatar user={r} className="small" />
+              <div className="row-main">
+                <span className="friend-name">{r.username}</span>
+                {(r.address || r.age) && (
+                  <span className="friend-last">
+                    {[r.address, r.age ? `${r.age} taona` : null]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </span>
+                )}
+              </div>
               {r.status === 'none' ? (
                 <button className="btn primary small" onClick={() => addFriend(r.id)}>
                   + Ampio
@@ -109,7 +128,7 @@ export default function Sidebar({
           <h3>Fangatahana namana ({requests.length})</h3>
           {requests.map((r) => (
             <div key={r.id} className="row">
-              <div className="avatar small">{r.username[0].toUpperCase()}</div>
+              <Avatar user={r} className="small" />
               <div className="row-main">{r.username}</div>
               <button
                 className="btn primary small"
@@ -141,9 +160,7 @@ export default function Sidebar({
             className={`friend-row ${activeId === f.id ? 'active' : ''}`}
             onClick={() => onOpen(f)}
           >
-            <div className={`avatar small ${f.online ? 'online' : ''}`}>
-              {f.username[0].toUpperCase()}
-            </div>
+            <Avatar user={f} className={`small ${f.online ? 'online' : ''}`} />
             <div className="row-main">
               <span className="friend-name">{f.username}</span>
               <span className="friend-last">
